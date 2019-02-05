@@ -18,4 +18,5 @@ const logger = getPreconfiguredLogger({
 
 ## Options of getPreconfiguredLogger
 
-`environment` — either `production` or `development`
+- `environment`, optional, — either `production` or `development`
+- `requestIdGetter`, optional, – a function that accepts Express' `req` object and gets its identifier (relevant only in prod environment)

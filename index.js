@@ -3,20 +3,26 @@ const property = require('lodash/property');
 
 const { createLogger, format } = winston;
 
-const prodFormat = format((info) => {
-  const fields = {
-    [Symbol.for('level')]: info.level, // required by Winston
-    level: info.level.toUpperCase(),
-    message: info.message,
-  };
-  const req = property('meta.req')(info);
-  if (req) {
-    fields.http_method = req.method;
-    fields.http_path = req.url;
-    fields.http_host = req.headers.host;
-  }
-  return fields;
-});
+const prodFormat = ({ requestIdGetter }) => {
+  const prodFormat = format((info) => {
+    const fields = {
+      [Symbol.for('level')]: info.level, // required by Winston
+      level: info.level.toUpperCase(),
+      message: info.message,
+    };
+    const req = property('meta.req')(info);
+    let requestId;
+    if (req) {
+      fields.http_method = req.method;
+      fields.http_path = req.url;
+      fields.http_host = req.headers.host;
+      requestId = requestIdGetter(req);
+      requestId && (fields.request_id = requestId);
+    }
+    return fields;
+  });
+  return prodFormat();
+};
 
 const createDevLogger = () => createLogger({
   format: format.combine(
@@ -32,10 +38,10 @@ const createDevLogger = () => createLogger({
   exitOnError: false
 });
 
-const createProdLogger = () => createLogger({
+const createProdLogger = ({ requestIdGetter }) => createLogger({
   format: format.combine(
     format.timestamp(),
-    prodFormat(),
+    prodFormat({ requestIdGetter }),
     format.json()
   ),
 
@@ -45,8 +51,8 @@ const createProdLogger = () => createLogger({
   exitOnError: false
 });
 
-const getPreconfiguredLogger = ({ environment }) => {
-  return environment === 'production' ? createProdLogger() : createDevLogger();
+const getPreconfiguredLogger = ({ environment, requestIdGetter }) => {
+  return environment === 'production' ? createProdLogger({ requestIdGetter }) : createDevLogger();
 };
 
 module.exports = {
