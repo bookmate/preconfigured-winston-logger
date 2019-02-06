@@ -16,7 +16,7 @@ const prodFormat = ({ requestIdGetter }) => {
       fields.http_method = req.method;
       fields.http_path = req.url;
       fields.http_host = req.headers.host;
-      requestId = requestIdGetter(req);
+      requestIdGetter && (requestId = requestIdGetter(req));
       requestId && (fields.request_id = requestId);
     }
     return fields;
