@@ -1,7 +1,14 @@
 const winston = require('winston');
-const property = require('lodash/property');
 
 const { createLogger, format } = winston;
+
+function getReq(info) {
+  try {
+    return info.meta.req;
+  } catch (e) {
+    return;
+  }
+}
 
 const prodFormat = ({ requestIdGetter }) => {
   const prodFormat = format((info) => {
@@ -10,7 +17,7 @@ const prodFormat = ({ requestIdGetter }) => {
       level: info.level.toUpperCase(),
       message: info.message,
     };
-    const req = property('meta.req')(info);
+    const req = getReq(info);
     let requestId;
     if (req) {
       fields.http_method = req.method;
